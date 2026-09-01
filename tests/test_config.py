@@ -21,6 +21,7 @@ def cfg_file(monkeypatch, tmp_path):
     monkeypatch.delenv("SENZA_KB_MODEL", raising=False)
     monkeypatch.delenv("SENZA_KB_RAW_DIR", raising=False)
     monkeypatch.delenv("SENZA_KB_DOMAINS", raising=False)
+    monkeypatch.delenv("SENZA_KB_PROVIDER", raising=False)
     return p
 
 
@@ -36,10 +37,12 @@ def test_config_file_provides(cfg_file):
     write_config_file(
         {
             "api_key": "sk-f1le",
+            "provider": "openai",
             "base_url": "https://file.example/v1",
             "model": "m-file",
             "raw_dir": "/tmp/kbraw",
             "domains": "litho",
+            "provider": "openai",
         }
     )
     s = load_settings()
@@ -51,8 +54,10 @@ def test_config_file_provides(cfg_file):
 
 
 def test_env_overrides_file(cfg_file, monkeypatch):
-    write_config_file({"api_key": "sk-f1le", "base_url": "https://file/v1", "model": "m-file"})
+    write_config_file({"api_key": "sk-f1le",
+            "provider": "openai", "base_url": "https://file/v1", "model": "m-file"})
     monkeypatch.setenv("SENZA_KB_MODEL", "m-env")
+    monkeypatch.setenv("SENZA_KB_PROVIDER", "openai")
     s = load_settings()
     assert s.model == "m-env"  # env 优先
     assert s.api_key == "sk-f1le"  # 文件兜底
@@ -62,13 +67,14 @@ def test_env_only_works(cfg_file, monkeypatch):
     monkeypatch.setenv("SENZA_KB_API_KEY", "sk-env")
     monkeypatch.setenv("SENZA_KB_BASE_URL", "https://env/v1")
     monkeypatch.setenv("SENZA_KB_MODEL", "m-env")
+    monkeypatch.setenv("SENZA_KB_PROVIDER", "openai")
     s = load_settings()
     assert s.model == "m-env"
     assert s.api_key == "sk-env"
 
 
 def test_write_and_read_roundtrip(cfg_file):
-    write_config_file({"api_key": "sk-a", "base_url": "https://x/v1", "model": "m"})
+    write_config_file({"api_key": "sk-a", "base_url": "https://x/v1", "model": "m", "provider": "openai"})
     write_config_file({"raw_dir": "/tmp/d"})  # 增量更新不覆盖已有
     data = read_config_file()
     assert data["api_key"] == "sk-a"

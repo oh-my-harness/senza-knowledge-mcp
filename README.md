@@ -41,12 +41,12 @@ uv sync --extra dev        # or: pip install -e . (runtime deps only)
 No provider configuration ships with the source — the source binds to no
 provider. **Configure once, in either of two ways:**
 
-- **Admin web (recommended)**: start the admin web → open **Settings** → fill in
-  API key / Base URL / Model → Save. Persisted to
-  `~/.senza-knowledge-mcp/config.json`.
-- **Environment variables**: `SENZA_KB_API_KEY`, `SENZA_KB_BASE_URL`,
-  `SENZA_KB_MODEL` (all three required; env takes precedence over the config
-  file). Any OpenAI-compatible provider works (DeepSeek, GLM, SiliconFlow, ...).
+- **Admin web (recommended)**: start the admin web → open **Settings** → pick
+  Provider (`openai` or `anthropic`) → fill in API key / Base URL / Model →
+  Save. Persisted to `~/.senza-knowledge-mcp/config.json`.
+- **Environment variables**: `SENZA_KB_PROVIDER` (`openai` | `anthropic`),
+  `SENZA_KB_API_KEY`, `SENZA_KB_BASE_URL`, `SENZA_KB_MODEL` (all four required;
+  env takes precedence over the config file).
 
 `kb_ask` / `kb_search` need the LLM; `kb_get` / `kb_list` are pure data tools and
 work without any configuration.
@@ -97,16 +97,17 @@ with four tools: `kb_ask`, `kb_search`, `kb_get`, `kb_list`.
 | `kb_list()` | fast, ms | all documents in the knowledge base |
 
 Fast tools read the immutable raw layer directly — no LLM involved, no timeouts.
-Smart tools run the internal Senza agent through whichever OpenAI-compatible
-provider you configure.
+Smart tools run the internal Senza agent through whichever provider you
+configure (Anthropic or OpenAI-compatible).
 
 ## Configuration
 
 | Env var | Required | Meaning |
 |---------|----------|---------|
-| `SENZA_KB_API_KEY` | **yes** | LLM provider API key |
-| `SENZA_KB_BASE_URL` | **yes** | OpenAI-compatible endpoint (e.g. DeepSeek) |
-| `SENZA_KB_MODEL` | **yes** | model id (e.g. `deepseek-v4-flash`) |
+| `SENZA_KB_PROVIDER` | **yes** | `openai` (OpenAI-compatible: DeepSeek, GLM, SiliconFlow, ...) or `anthropic` |
+| `SENZA_KB_API_KEY` | **yes** | provider API key |
+| `SENZA_KB_BASE_URL` | **yes** | provider endpoint |
+| `SENZA_KB_MODEL` | **yes** | model id (e.g. `deepseek-v4-flash`, `claude-sonnet-4-5`) |
 | `SENZA_KB_RAW_DIR` | no (default `.`) | raw layer directory |
 | `SENZA_KB_DOMAINS` | no | comma-separated domain tags |
 

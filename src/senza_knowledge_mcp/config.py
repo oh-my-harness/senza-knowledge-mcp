@@ -11,9 +11,16 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 CONFIG_PATH = Path.home() / ".senza-knowledge-mcp" / "config.json"
-REQUIRED_LLM_VARS = ("SENZA_KB_API_KEY", "SENZA_KB_BASE_URL", "SENZA_KB_MODEL")
+REQUIRED_LLM_VARS = (
+    "SENZA_KB_API_KEY",
+    "SENZA_KB_BASE_URL",
+    "SENZA_KB_MODEL",
+    "SENZA_KB_PROVIDER",
+)
+_VALID_PROVIDERS = ("openai", "anthropic")
 # env 变量名 -> 配置文件字段名
 _ENV_TO_FILE = {
+    "SENZA_KB_PROVIDER": "provider",
     "SENZA_KB_API_KEY": "api_key",
     "SENZA_KB_BASE_URL": "base_url",
     "SENZA_KB_MODEL": "model",
@@ -32,6 +39,7 @@ class Settings:
     model: str = ""
     base_url: str = ""
     api_key: str = ""
+    provider: str = "openai"  # "openai" | "anthropic"
     domains: list[str] = field(default_factory=list)
 
 
@@ -71,6 +79,10 @@ def load_settings() -> Settings:
 
     values = {k: resolve(k) for k in _ENV_TO_FILE}
     missing = [k for k in REQUIRED_LLM_VARS if not values[k]]
+    if values["SENZA_KB_PROVIDER"] and values["SENZA_KB_PROVIDER"] not in _VALID_PROVIDERS:
+        raise MissingConfigError(
+            f"SENZA_KB_PROVIDER must be one of {_VALID_PROVIDERS}, got {values['SENZA_KB_PROVIDER']!r}"
+        )
     if missing:
         raise MissingConfigError(
             "Missing required configuration: "
@@ -86,5 +98,6 @@ def load_settings() -> Settings:
         model=values["SENZA_KB_MODEL"],
         base_url=values["SENZA_KB_BASE_URL"],
         api_key=values["SENZA_KB_API_KEY"],
+        provider=values["SENZA_KB_PROVIDER"],
         domains=domains,
     )

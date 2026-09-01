@@ -69,9 +69,14 @@ class KnowledgeAgent:
             domains=self._settings.domains or None,
         )
         plugin = senza.knowledge.plugin([src])
-        prov = senza.providers.openai(
-            api_key=self._settings.api_key, base_url=self._settings.base_url
-        )
+        if self._settings.provider == "anthropic":
+            prov = senza.providers.anthropic(
+                api_key=self._settings.api_key, base_url=self._settings.base_url
+            )
+        else:
+            prov = senza.providers.openai(
+                api_key=self._settings.api_key, base_url=self._settings.base_url
+            )
         self._harness = (
             senza.HarnessBuilder(self._settings.model)
             .provider("*", prov)

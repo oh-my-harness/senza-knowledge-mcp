@@ -50,6 +50,7 @@ _FIELDS = [
     ("raw_dir", "Raw 目录"),
     ("domains", "Domains(逗号分隔)"),
 ]
+_PROVIDERS = ("openai", "anthropic")
 
 
 def _mask(value: str) -> str:
@@ -62,7 +63,12 @@ def _mask(value: str) -> str:
 
 def _settings_form(message: str = "") -> str:
     cfg = read_config_file()
-    rows = []
+    provider_val = str(cfg.get("provider", "openai") or "openai")
+    opts = "".join(
+        f'<option value="{p}" {"selected" if p == provider_val else ""}>{p}</option>'
+        for p in _PROVIDERS
+    )
+    rows = [f'<label>Provider<br><select name="provider">{opts}</select></label><br><br>']
     for key, label in _FIELDS:
         raw_val = str(cfg.get(key, "") or "")
         shown = _mask(raw_val) if key == "api_key" and raw_val else raw_val
@@ -148,6 +154,9 @@ def create_app(raw_dir: Path) -> FastAPI:
     async def settings_save(request: Request):
         form = await request.form()
         updates = {}
+        pv = str(form.get("provider", "") or "").strip()
+        if pv in _PROVIDERS:
+            updates["provider"] = pv
         for key, _label in _FIELDS:
             v = str(form.get(key, "") or "").strip()
             if v and "****" not in v:  # 打码值不回写
