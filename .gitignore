@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+build/
+dist/
+
+# 运行时数据
+.data/
+runs/
+
+# 环境
+.env
+.env.local
+
+# 编辑器/OS
+.DS_Store
+.idea/
+.vscode/
+
+# Local secrets (never ship)
+.env
