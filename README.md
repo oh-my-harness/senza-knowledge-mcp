@@ -16,7 +16,9 @@ coding agent (MCP client) ──MCP stdio──► senza-knowledge-mcp
                                             ├─ kb_get    fetch full document (fast, no LLM)
                                             └─ kb_list   list knowledge base contents
                                             (kb_ask / kb_search run an internal Senza agent
-                                             with the base knowledge plugin; DeepSeek by default)
+                                             with the base knowledge plugin)
+
+admin web settings page ──► ~/.senza-knowledge-mcp/config.json (shared config)
 
 browser ──► admin web (FastAPI)            upload PDF/text → parse → raw store
 ```
@@ -36,38 +38,34 @@ cd senza-knowledge-mcp
 uv sync --extra dev        # or: pip install -e . (runtime deps only)
 ```
 
-No provider configuration ships with the source. **All three LLM variables are
-required** — the source binds to no provider:
+No provider configuration ships with the source — the source binds to no
+provider. **Configure once, in either of two ways:**
 
-```bash
-export SENZA_KB_API_KEY="sk-..."                    # required — your API key
-export SENZA_KB_BASE_URL="https://api.deepseek.com/v1"  # required — OpenAI-compatible endpoint
-export SENZA_KB_MODEL="deepseek-v4-flash"           # required — model id
-export SENZA_KB_RAW_DIR="/path/to/kb/raw"           # optional, where ingested documents live
-```
+- **Admin web (recommended)**: start the admin web → open **Settings** → fill in
+  API key / Base URL / Model → Save. Persisted to
+  `~/.senza-knowledge-mcp/config.json`.
+- **Environment variables**: `SENZA_KB_API_KEY`, `SENZA_KB_BASE_URL`,
+  `SENZA_KB_MODEL` (all three required; env takes precedence over the config
+  file). Any OpenAI-compatible provider works (DeepSeek, GLM, SiliconFlow, ...).
 
-Any OpenAI-compatible provider works (DeepSeek, GLM, SiliconFlow, ...). Note:
 `kb_ask` / `kb_search` need the LLM; `kb_get` / `kb_list` are pure data tools and
-work without a key.
+work without any configuration.
 
 ## Quick start
 
-**1. Start the MCP server** (for your coding agent):
-
-```bash
-python -m senza_knowledge_mcp.mcp_server
-```
-
-**2. Or start the admin web** (upload documents in a browser):
+**1. Start the admin web** (configuration + document ingestion):
 
 ```bash
 python -m senza_knowledge_mcp.admin_app
-# open http://127.0.0.1:8081
+# open http://127.0.0.1:8081 → Settings: fill API key / Base URL / Model → Save
 ```
 
-**3. Ingest documents**: open the admin web → Upload → pick a PDF or UTF-8
+**2. Ingest documents**: admin web → Upload → pick a PDF or UTF-8
 text/markdown file. The document is parsed and stored in the raw layer, ready
 to be searched.
+
+**3. Wire the MCP server into your coding agent** (see next section) and start
+asking.
 
 ## Wire it into your coding agent
 
