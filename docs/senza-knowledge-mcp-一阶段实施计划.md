@@ -74,6 +74,27 @@ coding agent(MCP 客户端) ──MCP──►  MCP 服务(search/read/upsert + 
 
 ---
 
+### M7 · MinerU 云端解析器(部署后启用)
+- 在解析器抽象层上实现 `MinerUParser` 后端(HTTP 调用云端 MinerU 服务;GPL 隔离,仅进程间调用)
+- 配置切换:解析后端由配置选择(docling | mineru),管理后台设置页可切
+- **验证**:同一 PDF 分别经 Docling 与 MinerU 入库,原始层产物(文档+图片+图描述)可对比;MinerU 产出公式/表格结构化优于 Docling
+- 前置:云端 GPU 服务器部署 MinerU(推荐 ≥16GB 显存);服务化(HTTP)或 CLI over ssh
+
+### M8 · 二阶段:云端共享知识库(团队服务)
+- 知识库核心(原始层+关联层+索引)迁到云端服务,知识库只有一份
+- 团队成员经 MCP 访问(streamable-http 传输,替换本地 stdio;客户端配置只改 URL)
+- 多用户权限:补底座 `KnowledgeRegistry` + `KnowledgeAccessControl` + `KnowledgeCitationPolicy` + `SourceContract` 的 Python 绑定(当前 SDK 只暴露 local_source)
+- 管理后台加用户/权限治理(读写分离、审计)
+- 前置地基(已在底座存在):knowledge crate 的 registry/access/citation/contract
+
+## 二·五、里程碑依赖与顺序(整体视图)
+
+```
+MVP(M0-M4)✅ → M5 关联层 → M6 归纳+llm-wiki        (一阶段后半段,可并行于 M7)
+MVP ──────────→ M7 MinerU 云端解析(需 GPU 服务器)    (独立,解析质量增强)
+MVP+M5 ───────→ M8 云端共享知识库(需 Python 绑定补齐) (二阶段主体)
+```
+
 ## 四、关键决策(已确认)
 - MCP 优先(主接口给 coding agent),管理后台只做文档上传/查看/审批,不做问答主入口
 - 文档入库走管理后台/CLI(不走 MCP);检索/读取/写回走 MCP

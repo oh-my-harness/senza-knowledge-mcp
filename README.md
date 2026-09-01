@@ -114,7 +114,7 @@ configure (Anthropic or OpenAI-compatible).
 ## Milestones
 
 - ✅ M0 scaffold · M1 ingest pipeline (Docling → raw layer) · M3 MCP service · M4 admin web
-- Planned: M5 relation layer (heartbeat agent), M6 distilled knowledge pages + llm-wiki write-back, phase 2 cloud-shared knowledge base (multi-user, MCP with permissions)
+- Planned: M5 relation layer (heartbeat agent) · M6 distilled knowledge pages + llm-wiki write-back · M7 cloud MinerU parser (swap-in via the parser abstraction) · M8 phase-2 shared knowledge base (single cloud instance, MCP over HTTP, multi-user permissions via the base `KnowledgeAccessControl`)
 
 ## License
 
