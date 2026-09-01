@@ -36,12 +36,19 @@ cd senza-knowledge-mcp
 uv sync --extra dev        # or: pip install -e . (runtime deps only)
 ```
 
-No API key ships with the source. Provide your own:
+No provider configuration ships with the source. **All three LLM variables are
+required** — the source binds to no provider:
 
 ```bash
-export SENZA_KB_API_KEY="sk-..."          # DeepSeek (https://api.deepseek.com/v1)
-export SENZA_KB_RAW_DIR="/path/to/kb/raw" # where ingested documents live
+export SENZA_KB_API_KEY="sk-..."                    # required — your API key
+export SENZA_KB_BASE_URL="https://api.deepseek.com/v1"  # required — OpenAI-compatible endpoint
+export SENZA_KB_MODEL="deepseek-v4-flash"           # required — model id
+export SENZA_KB_RAW_DIR="/path/to/kb/raw"           # optional, where ingested documents live
 ```
+
+Any OpenAI-compatible provider works (DeepSeek, GLM, SiliconFlow, ...). Note:
+`kb_ask` / `kb_search` need the LLM; `kb_get` / `kb_list` are pure data tools and
+work without a key.
 
 ## Quick start
 
@@ -92,18 +99,18 @@ with four tools: `kb_ask`, `kb_search`, `kb_get`, `kb_list`.
 | `kb_list()` | fast, ms | all documents in the knowledge base |
 
 Fast tools read the immutable raw layer directly — no LLM involved, no timeouts.
-Smart tools run the internal Senza agent (DeepSeek V4 Flash by default; configure
-`SENZA_KB_MODEL` / `SENZA_KB_BASE_URL` for other OpenAI-compatible providers).
+Smart tools run the internal Senza agent through whichever OpenAI-compatible
+provider you configure.
 
 ## Configuration
 
-| Env var | Default | Meaning |
-|---------|---------|---------|
-| `SENZA_KB_RAW_DIR` | `.` | raw layer directory |
-| `SENZA_KB_API_KEY` | *(empty)* | LLM provider API key |
-| `SENZA_KB_BASE_URL` | `https://api.deepseek.com/v1` | OpenAI-compatible endpoint |
-| `SENZA_KB_MODEL` | `deepseek-v4-flash` | model id |
-| `SENZA_KB_DOMAINS` | *(empty)* | comma-separated domain tags |
+| Env var | Required | Meaning |
+|---------|----------|---------|
+| `SENZA_KB_API_KEY` | **yes** | LLM provider API key |
+| `SENZA_KB_BASE_URL` | **yes** | OpenAI-compatible endpoint (e.g. DeepSeek) |
+| `SENZA_KB_MODEL` | **yes** | model id (e.g. `deepseek-v4-flash`) |
+| `SENZA_KB_RAW_DIR` | no (default `.`) | raw layer directory |
+| `SENZA_KB_DOMAINS` | no | comma-separated domain tags |
 
 ## Milestones
 
