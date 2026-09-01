@@ -1,43 +1,86 @@
-"""config 测试 — 三个 LLM 变量强制配置."""
+"""config 测试:env > 配置文件 > 报错."""
+import json
+
 import pytest
 
-from senza_knowledge_mcp.config import Settings, MissingConfigError, load_settings
+from senza_knowledge_mcp.config import (
+    MissingConfigError,
+    Settings,
+    load_settings,
+    read_config_file,
+    write_config_file,
+)
 
 
-def test_missing_vars_raises(monkeypatch):
-    for k in ("SENZA_KB_RAW_DIR", "SENZA_KB_MODEL", "SENZA_KB_BASE_URL", "SENZA_KB_API_KEY", "SENZA_KB_DOMAINS"):
-        monkeypatch.delenv(k, raising=False)
+@pytest.fixture
+def cfg_file(monkeypatch, tmp_path):
+    p = tmp_path / "config.json"
+    monkeypatch.setenv("SENZA_KB_CONFIG_FILE", str(p))
+    monkeypatch.delenv("SENZA_KB_API_KEY", raising=False)
+    monkeypatch.delenv("SENZA_KB_BASE_URL", raising=False)
+    monkeypatch.delenv("SENZA_KB_MODEL", raising=False)
+    monkeypatch.delenv("SENZA_KB_RAW_DIR", raising=False)
+    monkeypatch.delenv("SENZA_KB_DOMAINS", raising=False)
+    return p
+
+
+def test_all_missing_raises(cfg_file):
     with pytest.raises(MissingConfigError) as e:
         load_settings()
-    # 三个都报
     assert "SENZA_KB_API_KEY" in str(e.value)
     assert "SENZA_KB_BASE_URL" in str(e.value)
     assert "SENZA_KB_MODEL" in str(e.value)
 
 
-def test_partial_missing_raises(monkeypatch):
-    monkeypatch.setenv("SENZA_KB_API_KEY", "sk-x")
-    monkeypatch.delenv("SENZA_KB_BASE_URL", raising=False)
-    monkeypatch.delenv("SENZA_KB_MODEL", raising=False)
+def test_config_file_provides(cfg_file):
+    write_config_file(
+        {
+            "api_key": "sk-f1le",
+            "base_url": "https://file.example/v1",
+            "model": "m-file",
+            "raw_dir": "/tmp/kbraw",
+            "domains": "litho",
+        }
+    )
+    s = load_settings()
+    assert s.api_key == "sk-f1le"
+    assert s.base_url == "https://file.example/v1"
+    assert s.model == "m-file"
+    assert s.raw_dir.name == "kbraw"
+    assert s.domains == ["litho"]
+
+
+def test_env_overrides_file(cfg_file, monkeypatch):
+    write_config_file({"api_key": "sk-f1le", "base_url": "https://file/v1", "model": "m-file"})
+    monkeypatch.setenv("SENZA_KB_MODEL", "m-env")
+    s = load_settings()
+    assert s.model == "m-env"  # env 优先
+    assert s.api_key == "sk-f1le"  # 文件兜底
+
+
+def test_env_only_works(cfg_file, monkeypatch):
+    monkeypatch.setenv("SENZA_KB_API_KEY", "sk-env")
+    monkeypatch.setenv("SENZA_KB_BASE_URL", "https://env/v1")
+    monkeypatch.setenv("SENZA_KB_MODEL", "m-env")
+    s = load_settings()
+    assert s.model == "m-env"
+    assert s.api_key == "sk-env"
+
+
+def test_write_and_read_roundtrip(cfg_file):
+    write_config_file({"api_key": "sk-a", "base_url": "https://x/v1", "model": "m"})
+    write_config_file({"raw_dir": "/tmp/d"})  # 增量更新不覆盖已有
+    data = read_config_file()
+    assert data["api_key"] == "sk-a"
+    assert data["raw_dir"] == "/tmp/d"
+
+
+def test_corrupt_file_treated_as_empty(cfg_file):
+    cfg_file.write_text("{broken json")
     with pytest.raises(MissingConfigError):
         load_settings()
 
 
-def test_all_set_loads(monkeypatch, tmp_path):
-    monkeypatch.setenv("SENZA_KB_RAW_DIR", str(tmp_path / "raw"))
-    monkeypatch.setenv("SENZA_KB_MODEL", "m1")
-    monkeypatch.setenv("SENZA_KB_BASE_URL", "https://example.com/v1")
-    monkeypatch.setenv("SENZA_KB_API_KEY", "sk-x")
-    monkeypatch.setenv("SENZA_KB_DOMAINS", "litho, opc")
-    s = load_settings()
-    assert s.model == "m1"
-    assert s.base_url == "https://example.com/v1"
-    assert s.api_key == "sk-x"
-    assert s.raw_dir == tmp_path / "raw"
-    assert s.domains == ["litho", "opc"]
-
-
-def test_settings_defaults_direct():
-    # 直接构造(不经 load)不受强制约束——供测试/嵌入使用
+def test_settings_direct_construct():
     s = Settings(model="dummy")
     assert s.raw_dir is not None
