@@ -131,3 +131,12 @@ def test_masked_key_not_overwritten(tmp_path, cfg_file):
     )
     data = read_config_file()
     assert data["api_key"] == "sk-real12345"  # 打码提交未覆盖真实 key
+
+
+def test_admin_app_main_imports_available():
+    """main() 依赖的符号必须可导入(防 import 回归)."""
+    import senza_knowledge_mcp.admin_app as m
+
+    assert callable(m.load_settings)
+    assert callable(m.create_app)
+    assert callable(m.write_config_file)

@@ -12,7 +12,7 @@ from fastapi import FastAPI, Request, UploadFile
 from fastapi.responses import HTMLResponse
 
 from senza_knowledge_mcp.admin_routes import is_supported
-from senza_knowledge_mcp.config import read_config_file, write_config_file
+from senza_knowledge_mcp.config import load_settings, read_config_file, write_config_file
 from senza_knowledge_mcp.ingest import create_parser
 from senza_knowledge_mcp.ingest.raw_store import RawStore
 
